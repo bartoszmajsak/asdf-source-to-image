@@ -36,8 +36,15 @@ list_all_versions() {
 tagged_commit() {
   local tag
   tag="v$1"
-  url=$(curl "${curl_opts[@]}" "https://api.github.com/repos/${GH_REPO_SLUG}/git/refs/tags/$tag" | jq -r .object.url)
-  curl "${curl_opts[@]}" "${url}" | jq -r .object.sha | cut -c1-8
+  tagData=$(curl "${curl_opts[@]}" "https://api.github.com/repos/${GH_REPO_SLUG}/git/refs/tags/$tag")
+  url=$(echo "${tagData}" | jq -r .object.url)
+  taggedCommit=$(curl "${curl_opts[@]}" "${url}")
+  message=$(echo "${taggedCommit}" | jq -r .message)
+  if [[ "${message}" == Merge\ pull\ request* ]]; then
+    echo "${tagData}" | jq -r .object.sha | cut -c1-8
+  else
+    echo "${taggedCommit}" | jq -r .object.sha | cut -c1-8
+  fi
 }
 
 
